@@ -27,7 +27,7 @@ export default function Login() {
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
       if (data.session) {
-        // router.replace('/(tabs)')
+        router.replace('/(tabs)/today')
       }
     })
   }, [])
@@ -36,8 +36,8 @@ export default function Login() {
     setLoading(true)
     const { error } = await supabase.auth.signInWithPassword({ email, password })
     if (!error) {
-      ensureUserSettings()
-      // router.replace('/(tabs)')
+      await ensureUserSettings()
+      router.replace('/(tabs)/today')
     } else {
       console.error('Login error:', error.message)
     }
@@ -46,9 +46,12 @@ export default function Login() {
 
   async function onSignup() {
     setLoading(true)
-    const { error } = await supabase.auth.signUp({ email, password })
+    const { data, error } = await supabase.auth.signUp({ email, password })
     if (!error) {
-      // router.replace('/(tabs)')
+      if (data.session) {
+        await ensureUserSettings()
+        router.replace('/(tabs)/today')
+      }
     } else {
       console.error('Signup error:', error.message)
     }

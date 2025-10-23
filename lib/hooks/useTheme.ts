@@ -1,9 +1,23 @@
-import { useColorScheme } from 'react-native'
-import { Colors, Shadows } from 'react-native-ui-lib'
+import { useColorScheme, ViewStyle } from 'react-native'
+import { Colors } from 'react-native-ui-lib'
 
 export function useTheme() {
   const colorScheme = useColorScheme()
   const isDark = colorScheme === 'dark'
+
+  const primaryGradient: readonly [string, string, string] = [
+    Colors.gradientStart,
+    Colors.gradientMiddle,
+    Colors.gradientEnd,
+  ]
+  const cardGradient: readonly [string, string] = isDark
+    ? ['rgba(37, 38, 89, 0.9)', 'rgba(37, 38, 89, 0.7)']
+    : ['rgba(255, 255, 255, 0.9)', 'rgba(255, 255, 255, 0.7)']
+
+  const gradients: { primary: readonly [string, string, string]; card: readonly [string, string] } = {
+    primary: primaryGradient,
+    card: cardGradient,
+  }
 
   return {
     isDark,
@@ -43,14 +57,40 @@ export function useTheme() {
       glass: isDark ? Colors.glassDark : Colors.glassLight,
     },
     shadows: {
-      card: isDark ? Shadows.cardDark : Shadows.cardLight,
-      button: isDark ? Shadows.buttonDark : Shadows.buttonLight,
+      card: isDark ? darkCardShadow : lightCardShadow,
+      button: isDark ? darkButtonShadow : lightButtonShadow,
     },
-    gradients: {
-      primary: [Colors.gradientStart, Colors.gradientMiddle, Colors.gradientEnd],
-      card: isDark 
-        ? ['rgba(37, 38, 89, 0.9)', 'rgba(37, 38, 89, 0.7)']
-        : ['rgba(255, 255, 255, 0.9)', 'rgba(255, 255, 255, 0.7)'],
-    },
+    gradients,
   }
+}
+const lightCardShadow: ViewStyle = {
+  shadowColor: '#6366F1',
+  shadowOffset: { width: 0, height: 4 },
+  shadowOpacity: 0.12,
+  shadowRadius: 16,
+  elevation: 6,
+}
+
+const darkCardShadow: ViewStyle = {
+  shadowColor: '#000000',
+  shadowOffset: { width: 0, height: 8 },
+  shadowOpacity: 0.45,
+  shadowRadius: 24,
+  elevation: 10,
+}
+
+const lightButtonShadow: ViewStyle = {
+  shadowColor: '#6366F1',
+  shadowOffset: { width: 0, height: 2 },
+  shadowOpacity: 0.16,
+  shadowRadius: 8,
+  elevation: 4,
+}
+
+const darkButtonShadow: ViewStyle = {
+  shadowColor: '#000000',
+  shadowOffset: { width: 0, height: 4 },
+  shadowOpacity: 0.35,
+  shadowRadius: 12,
+  elevation: 6,
 }

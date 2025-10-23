@@ -1,4 +1,4 @@
-import { BorderRadiuses, Colors, Shadows, Spacings, Typography } from 'react-native-ui-lib'
+import { BorderRadiuses, Colors, Spacings, Typography } from 'react-native-ui-lib'
 
 // Modern, cohesive design system
 Colors.loadColors({
@@ -84,36 +84,4 @@ BorderRadiuses.loadBorders({
   card: 16,
   button: 12,
   input: 8,
-})
-
-Shadows.loadShadows({
-  // Subtle, modern shadows
-  cardLight: {
-    shadowColor: '#6366F1',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.08,
-    shadowRadius: 16,
-    elevation: 4,
-  },
-  cardDark: {
-    shadowColor: '#000000',
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.4,
-    shadowRadius: 24,
-    elevation: 8,
-  },
-  buttonLight: {
-    shadowColor: '#6366F1',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.12,
-    shadowRadius: 8,
-    elevation: 2,
-  },
-  buttonDark: {
-    shadowColor: '#000000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 12,
-    elevation: 4,
-  },
 })
