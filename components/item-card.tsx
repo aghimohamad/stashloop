@@ -76,11 +76,11 @@ function ItemCardComponent({ item, actions = [], compact = false }: Props) {
 
         <Pressable onPress={handleOpenLink}>
           <View style={{ gap: 10 }}>
-            <Text style={{ color: 'white', fontSize: compact ? 20 : 22, fontWeight: '700', lineHeight: 28 }}>
+            <Text style={{ color: 'black', fontSize: compact ? 20 : 22, fontWeight: '700', lineHeight: 28 }}>
               {item.title ?? item.url}
             </Text>
             {item.description && (
-              <Text style={{ color: 'rgba(255,255,255,0.75)', fontSize: 14, lineHeight: 20 }}>
+              <Text style={{ color: 'BLACK', fontSize: 14, lineHeight: 20 }}>
                 {item.description}
               </Text>
             )}
