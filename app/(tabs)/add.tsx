@@ -1,24 +1,59 @@
-import { LinearGradient } from 'expo-linear-gradient'
-import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { router } from 'expo-router'
-import { useMemo, useState } from 'react'
-import { Alert, KeyboardAvoidingView, Platform, Pressable, ScrollView, StatusBar } from 'react-native'
-import { Button, Card, Text, TextField, View } from 'react-native-ui-lib'
-import { Ionicons } from '@expo/vector-icons'
+import { ClipboardMonitor } from '@/components/clipboard-monitor'
 import { createItem } from '@/lib/api/items'
 import { useTheme } from '@/lib/hooks/useTheme'
+import { ShareIntentManager } from '@/lib/share-intent'
+import { getRandomTestIntent } from '@/lib/test-share-intents'
+import { Ionicons } from '@expo/vector-icons'
+import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { LinearGradient } from 'expo-linear-gradient'
+import { router, useLocalSearchParams } from 'expo-router'
+import { useEffect, useMemo, useState } from 'react'
+import { Alert, KeyboardAvoidingView, Platform, Pressable, ScrollView, StatusBar } from 'react-native'
+import { Button, Card, Text, TextField, View } from 'react-native-ui-lib'
 
 const urlHints = ['https://', 'http://']
 
 export default function AddLinkScreen() {
   const { colors, gradients, shadows, isDark } = useTheme()
   const queryClient = useQueryClient()
-
+  const params = useLocalSearchParams<{
+    sharedUrl?: string
+    sharedTitle?: string
+    sharedText?: string
+  }>()
+  console.log(params )
   const [url, setUrl] = useState('')
   const [title, setTitle] = useState('')
   const [description, setDescription] = useState('')
   const [type, setType] = useState<'article' | 'video' | 'thread' | 'other'>('article')
   const [lastSavedTitle, setLastSavedTitle] = useState<string | null>(null)
+  const [isFromShare, setIsFromShare] = useState(false)
+
+  // Handle shared content when component mounts
+  useEffect(() => {
+    if (params.sharedUrl) {
+      setUrl(params.sharedUrl)
+      setIsFromShare(true)
+      
+      // Auto-detect content type based on URL
+      const urlLower = params.sharedUrl.toLowerCase()
+      if (urlLower.includes('youtube.com') || urlLower.includes('youtu.be') || 
+          urlLower.includes('vimeo.com') || urlLower.includes('tiktok.com')) {
+        setType('video')
+      } else if (urlLower.includes('twitter.com') || urlLower.includes('x.com') || 
+                 urlLower.includes('threads.net') || urlLower.includes('reddit.com')) {
+        setType('thread')
+      }
+    }
+    
+    if (params.sharedTitle) {
+      setTitle(params.sharedTitle)
+    }
+    
+    if (params.sharedText && params.sharedText !== params.sharedUrl) {
+      setDescription(params.sharedText)
+    }
+  }, [params.sharedUrl, params.sharedTitle, params.sharedText])
 
   const mutation = useMutation({
     mutationFn: () => createItem({ url, title, description, type }),
@@ -61,10 +96,13 @@ export default function AddLinkScreen() {
           }}
         >
           <Text style={{ fontSize: 13, fontWeight: '600', color: 'rgba(255,255,255,0.72)' }}>
-            Save something inspiring
+            {isFromShare ? 'Shared content received' : 'Save something inspiring'}
           </Text>
           <Text style={{ fontSize: 24, fontWeight: '800', color: 'white', lineHeight: 32 }}>
-            Drop a link. We&apos;ll queue it for tomorrow&apos;s loop.
+            {isFromShare 
+              ? 'Great! We&apos;ve pre-filled the link for you.' 
+              : 'Drop a link. We&apos;ll queue it for tomorrow&apos;s loop.'
+            }
           </Text>
           <View row style={{ gap: 12 }}>
             <View
@@ -77,13 +115,30 @@ export default function AddLinkScreen() {
                 alignItems: 'center',
               }}
             >
-              <Ionicons name="sparkles-outline" size={22} color="white" />
+              <Ionicons 
+                name={isFromShare ? "share-outline" : "sparkles-outline"} 
+                size={22} 
+                color="white" 
+              />
             </View>
             <Text style={{ color: 'rgba(255,255,255,0.8)', fontSize: 15, lineHeight: 22 }}>
-              Paste any URL and we&apos;ll enrich it automatically. You can add a custom title or note, too.
+              {isFromShare 
+                ? 'Add a title or note if you&apos;d like, then save it to your inbox.'
+                : 'Paste any URL and we&apos;ll enrich it automatically. You can add a custom title or note, too.'
+              }
             </Text>
           </View>
         </LinearGradient>
+
+        {!isFromShare && (
+          <ClipboardMonitor 
+            onUrlDetected={(detectedUrl) => {
+              setUrl(detectedUrl)
+              const shareManager = ShareIntentManager.getInstance()
+              setType(shareManager.detectContentType(detectedUrl))
+            }} 
+          />
+        )}
 
         <Card
           style={[
@@ -168,6 +223,45 @@ export default function AddLinkScreen() {
             style={{ borderRadius: 18, paddingVertical: 16, opacity: submitDisabled ? 0.6 : 1 }}
             labelStyle={{ fontSize: 16, fontWeight: '600', color: 'white' }}
           />
+
+          {/* Development Tools */}
+          {__DEV__ && (
+            <View style={{ gap: 8, marginTop: 8 }}>
+              <Button
+                label="🧪 Test Random Share Intent"
+                onPress={() => {
+                  // Simulate a share intent for testing with random content
+                  const testIntent = getRandomTestIntent()
+                  router.push({
+                    pathname: '/(tabs)/add',
+                    params: {
+                      sharedUrl: testIntent.url,
+                      sharedTitle: testIntent.title,
+                      sharedText: testIntent.text
+                    }
+                  })
+                }}
+                backgroundColor="transparent"
+                labelStyle={{ color: colors.textSecondary, fontWeight: '500', fontSize: 14 }}
+                style={{ 
+                  borderRadius: 12, 
+                  paddingVertical: 12, 
+                  borderWidth: 1, 
+                  borderColor: colors.border
+                }}
+              />
+              
+              <Text style={{ 
+                fontSize: 12, 
+                color: colors.textSecondary, 
+                textAlign: 'center',
+                fontStyle: 'italic',
+                paddingHorizontal: 16
+              }}>
+                💡 Share intents only work in production builds, not Expo Go. Use clipboard detection or the simulation button above for testing.
+              </Text>
+            </View>
+          )}
         </Card>
 
         {lastSavedTitle && (

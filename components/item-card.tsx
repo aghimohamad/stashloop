@@ -124,10 +124,10 @@ function ItemCardComponent({ item, actions = [], compact = false }: Props) {
                       action.type === 'primary'
                         ? colors.primary
                         : action.type === 'secondary'
-                          ? 'rgba(255,255,255,0.15)'
-                          : 'transparent',
+                          ? 'rgba(110, 0, 179, 0.771)'
+                          : 'green',
                     borderWidth: action.type === 'ghost' ? 1 : 0,
-                    borderColor: action.type === 'ghost' ? 'rgba(255,255,255,0.2)' : 'transparent',
+                    borderColor: action.type === 'ghost' ? 'rgba(255, 255, 255, 0.2)' : 'transparent',
                     opacity: action.disabled ? 0.6 : 1,
                   },
                   shadows.button,

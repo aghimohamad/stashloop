@@ -63,6 +63,7 @@ export async function createItem(input: CreateItemInput) {
   }
 
   const { data, error } = await supabase.from('items').insert(payload).select().single<Item>()
+  console.log(error)
   if (error) throw error
 
   // Kick off metadata scrape; ignore failures so the item still exists
