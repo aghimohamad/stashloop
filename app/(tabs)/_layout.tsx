@@ -9,6 +9,7 @@ const iconMap: Record<string, { filled: keyof typeof Ionicons.glyphMap; outline:
   today: { filled: 'calendar', outline: 'calendar-outline' },
   inbox: { filled: 'mail', outline: 'mail-outline' },
   add: { filled: 'add-circle', outline: 'add-circle-outline' },
+  settings: { filled: 'settings', outline: 'settings-outline' },
 }
 
 export default function TabLayout() {
@@ -59,6 +60,7 @@ export default function TabLayout() {
       <Tabs.Screen name="today" options={{ title: 'Today' }} />
       <Tabs.Screen name="add" options={{ title: 'Add' }} />
       <Tabs.Screen name="inbox" options={{ title: 'Inbox' }} />
+      <Tabs.Screen name="settings" options={{ title: 'Settings' }} />
     </Tabs>
   )
 }
