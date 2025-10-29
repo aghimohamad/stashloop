@@ -1,25 +1,24 @@
 {
   "expo": {
-    "name": "famimeds",
-    "slug": "famimeds",
+    "name": "stashloop",
+    "slug": "stashloop",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "famimeds",
+    "scheme": "stashloop",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
       "supportsTablet": true,
       "associatedDomains": [
-        "applinks:famimeds.app",
-        "applinks:famimeds.app"
+        "applinks:stashloop.app"
       ],
       "infoPlist": {
         "NSAppTransportSecurity": {
           "NSAllowsArbitraryLoads": true
         }
       },
-      "bundleIdentifier": "com.anonymous.famimeds"
+      "bundleIdentifier": "com.aghi.stashloop"
     },
     "android": {
       "adaptiveIcon": {
@@ -33,21 +32,40 @@
       "intentFilters": [
         {
           "action": "SEND",
-          "category": ["DEFAULT"],
-          "data": [{ "mimeType": "text/*" }]
+          "category": [
+            "DEFAULT"
+          ],
+          "data": [
+            {
+              "mimeType": "text/*"
+            }
+          ]
         },
         {
           "action": "SEND",
-          "category": ["DEFAULT"],
-          "data": [{ "mimeType": "image/*" }]
+          "category": [
+            "DEFAULT"
+          ],
+          "data": [
+            {
+              "mimeType": "image/*"
+            }
+          ]
         },
         {
           "action": "SEND_MULTIPLE",
-          "category": ["DEFAULT"],
-          "data": [{ "mimeType": "image/*" }]
+          "category": [
+            "DEFAULT"
+          ],
+          "data": [
+            {
+              "mimeType": "image/*"
+            }
+          ]
         }
       ],
-      "package": "com.anonymous.famimeds"
+      "package": "com.aghi.stashloop",
+      "googleServicesFile": "./google-services.json"
     },
     "web": {
       "output": "static",
@@ -66,11 +84,19 @@
             "backgroundColor": "#000000"
           }
         }
-      ]
+      ],
+      "expo-notifications"
     ],
     "experiments": {
       "typedRoutes": true,
       "reactCompiler": true
-    }
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "afb785cb-5fc6-4a6d-9a5e-229d1dd952ba"
+      }
+    },
+    "owner": "aghi.mohamad"
   }
 }

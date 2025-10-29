@@ -2,6 +2,8 @@ import { useTheme } from '@/lib/hooks/useTheme'
 import { Tabs } from 'expo-router'
 import { Ionicons } from '@expo/vector-icons'
 import { Platform } from 'react-native'
+import { useEffect } from 'react'
+import  {registerForPushNotificationsAsync}  from '@/lib/notifications'
 
 const iconMap: Record<string, { filled: keyof typeof Ionicons.glyphMap; outline: keyof typeof Ionicons.glyphMap }> = {
   today: { filled: 'calendar', outline: 'calendar-outline' },
@@ -11,7 +13,10 @@ const iconMap: Record<string, { filled: keyof typeof Ionicons.glyphMap; outline:
 
 export default function TabLayout() {
   const { colors, isDark } = useTheme()
-
+  
+  useEffect(() => {
+    registerForPushNotificationsAsync()
+  }, [])
   return (
     <Tabs
       screenOptions={({ route }) => {
