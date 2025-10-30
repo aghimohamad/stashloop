@@ -146,3 +146,18 @@ function safeDomain(url: string) {
     return null
   }
 }
+
+export async function updateStreaks() {
+  // after you set an item to 'done'
+const { count } = await supabase
+  .from('items')
+  .select('*', { head: true, count: 'exact' })
+  .eq('status', 'today')
+
+if ((count ?? 0) === 0) {
+  // all today items complete -> update streak now
+ const res =  await supabase.functions.invoke('update-streaks', { body: {} }).catch(() => {})
+ return res
+}
+
+}

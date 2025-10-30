@@ -4,6 +4,7 @@ import { Ionicons } from '@expo/vector-icons'
 import { Platform } from 'react-native'
 import { useEffect } from 'react'
 import  {registerForPushNotificationsAsync}  from '@/lib/notifications'
+import { supabase } from '@/lib/supabase'
 
 const iconMap: Record<string, { filled: keyof typeof Ionicons.glyphMap; outline: keyof typeof Ionicons.glyphMap }> = {
   today: { filled: 'calendar', outline: 'calendar-outline' },
@@ -15,8 +16,12 @@ const iconMap: Record<string, { filled: keyof typeof Ionicons.glyphMap; outline:
 export default function TabLayout() {
   const { colors, isDark } = useTheme()
   
+  const fillToday = async () => {
+    await supabase.functions.invoke('fill-today', { body: {} }).catch(() => {})
+  }
   useEffect(() => {
     registerForPushNotificationsAsync()
+    fillToday()
   }, [])
   return (
     <Tabs

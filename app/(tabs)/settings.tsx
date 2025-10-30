@@ -293,6 +293,7 @@ export default function SettingsScreen() {
             icon="log-out-outline"
             onPress={async () => {
               await supabase.auth.signOut()
+              
             }}
             variant="danger"
           />

@@ -1,15 +1,18 @@
 import { ItemCard } from '@/components/item-card'
+import { useStreaks } from '@/hooks/useStreaks'
 import {
   fetchTodayItems,
   Item,
   markItemDone,
   snoozeItem,
   togglePin,
+  updateStreaks,
 } from '@/lib/api/items'
 import { useTheme } from '@/lib/hooks/useTheme'
-import { router } from 'expo-router'
-import { LinearGradient } from 'expo-linear-gradient'
+import { Ionicons } from '@expo/vector-icons'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { LinearGradient } from 'expo-linear-gradient'
+import { router } from 'expo-router'
 import { useMemo } from 'react'
 import {
   ActionSheetIOS,
@@ -32,7 +35,15 @@ export default function TodayScreen() {
     queryFn: fetchTodayItems,
   })
 
-  const invalidateLists = () => {
+  const streakUtil = useStreaks()
+
+  const invalidateLists = async () => {
+    // after you set an item to 'done'
+   const res = await updateStreaks()
+   if (res) {
+    const { streak, best_streak, last_streak_at } = res.data.data[0]
+    streakUtil.setOptimistic({ streak, best_streak, last_streak_at })
+   }
     queryClient.invalidateQueries({ queryKey: ['items', 'today'] })
     queryClient.invalidateQueries({ queryKey: ['items', 'inbox'] })
   }
@@ -105,10 +116,12 @@ export default function TodayScreen() {
           style={{
             borderRadius: 28,
             padding: 28,
-            gap: 16,
+            gap: 20,
           }}
         >
           <Text style={{ color: 'rgba(255,255,255,0.7)', fontSize: 14, fontWeight: '600' }}>Today&apos;s Loop</Text>
+          
+          {/* Main content row */}
           <View row centerV style={{ gap: 14 }}>
             <View
               style={{
@@ -133,6 +146,9 @@ export default function TodayScreen() {
               </Text>
             </View>
           </View>
+
+          {/* Streaks section */}
+          <StreaksDisplay />
 
           {!hasItems && (
             <Button
@@ -210,6 +226,130 @@ function EmptyToday() {
         labelStyle={{ color: 'white', fontWeight: '600' }}
         style={{ borderRadius: 14, paddingVertical: 12 }}
       />
+    </View>
+  )
+}
+// Streaks Display Component
+function StreaksDisplay() {
+  const { streaks, loading } = useStreaks()
+  
+  if (loading || !streaks) {
+    return null
+  }
+
+  const { streak, best_streak } = streaks
+  const isOnStreak = streak > 0
+  
+  return (
+    <View style={{ gap: 12 }}>
+      {/* Streak indicator */}
+      <View row centerV style={{ gap: 12 }}>
+        <View
+          style={{
+            backgroundColor: isOnStreak ? 'rgba(16, 185, 129, 0.2)' : 'rgba(255,255,255,0.15)',
+            borderRadius: 12,
+            padding: 8,
+          }}
+        >
+          <Ionicons 
+            name={isOnStreak ? "flame" : "flame-outline"} 
+            size={20} 
+            color={isOnStreak ? "#10B981" : "rgba(255,255,255,0.7)"} 
+          />
+        </View>
+        <View flex>
+          <Text style={{ color: 'white', fontSize: 16, fontWeight: '700' }}>
+            {isOnStreak ? `${streak} day streak!` : 'Start your streak'}
+          </Text>
+          <Text style={{ color: 'rgba(255,255,255,0.7)', fontSize: 13 }}>
+            {isOnStreak 
+              ? `Personal best: ${best_streak} days`
+              : 'Complete items daily to build momentum'
+            }
+          </Text>
+        </View>
+      </View>
+
+      {/* Streak visualization */}
+      {isOnStreak && (
+        <View style={{ gap: 8 }}>
+          <View row centerV style={{ justifyContent: 'space-between' }}>
+            <Text style={{ color: 'rgba(255,255,255,0.8)', fontSize: 12, fontWeight: '600' }}>
+              PROGRESS TO PERSONAL BEST
+            </Text>
+            <Text style={{ color: 'rgba(255,255,255,0.8)', fontSize: 12, fontWeight: '600' }}>
+              {Math.min(streak, best_streak)}/{best_streak}
+            </Text>
+          </View>
+          <StreakProgressBar current={streak} best={best_streak} />
+        </View>
+      )}
+    </View>
+  )
+}
+
+// Streak Progress Bar Component
+function StreakProgressBar({ current, best }: { current: number; best: number }) {
+  const progress = Math.min(current / best, 1)
+  const isNewRecord = current > best
+  
+  return (
+    <View style={{ gap: 6 }}>
+      <View
+        style={{
+          height: 6,
+          backgroundColor: 'rgba(255,255,255,0.2)',
+          borderRadius: 3,
+          overflow: 'hidden',
+        }}
+      >
+        <View
+          style={{
+            height: '100%',
+            width: `${progress * 100}%`,
+            backgroundColor: isNewRecord ? '#F59E0B' : '#10B981',
+            borderRadius: 3,
+          }}
+        />
+      </View>
+      
+      {/* Milestone indicators */}
+      <View row style={{ justifyContent: 'space-between', paddingHorizontal: 2 }}>
+        {Array.from({ length: Math.min(best, 7) }, (_, i) => {
+          const milestone = Math.ceil((best / Math.min(best, 7)) * (i + 1))
+          const isReached = current >= milestone
+          return (
+            <View key={i} style={{ alignItems: 'center', gap: 2 }}>
+              <View
+                style={{
+                  width: 4,
+                  height: 4,
+                  borderRadius: 2,
+                  backgroundColor: isReached 
+                    ? (isNewRecord && current >= milestone ? '#F59E0B' : '#10B981')
+                    : 'rgba(255,255,255,0.3)',
+                }}
+              />
+              <Text style={{ 
+                color: 'rgba(255,255,255,0.6)', 
+                fontSize: 10, 
+                fontWeight: '500' 
+              }}>
+                {milestone}
+              </Text>
+            </View>
+          )
+        })}
+      </View>
+      
+      {isNewRecord && (
+        <View row centerV style={{ gap: 6, marginTop: 4 }}>
+          <Ionicons name="trophy" size={14} color="#F59E0B" />
+          <Text style={{ color: '#F59E0B', fontSize: 12, fontWeight: '700' }}>
+            New personal record! 🎉
+          </Text>
+        </View>
+      )}
     </View>
   )
 }

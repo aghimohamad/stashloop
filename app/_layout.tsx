@@ -8,7 +8,7 @@ export default function RootLayout() {
   // useEffect(() => { ensureNotificationPerms() }, [])
   return (
     <QueryClientProvider client={queryClient}>
-      {/* <ShareIntentHandler /> */}
+      <ShareIntentHandler />
       <Stack screenOptions={{ headerShadowVisible: false, headerShown: false  }} />
     </QueryClientProvider>
   )

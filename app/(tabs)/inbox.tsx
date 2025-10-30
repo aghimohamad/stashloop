@@ -5,6 +5,7 @@ import {
   markItemDone,
   moveToToday,
   togglePin,
+  updateStreaks,
 } from '@/lib/api/items'
 import { useTheme } from '@/lib/hooks/useTheme'
 import { router } from 'expo-router'
@@ -14,6 +15,7 @@ import { useMemo, useState } from 'react'
 import { Alert, Pressable, RefreshControl, ScrollView, StatusBar } from 'react-native'
 import { Ionicons } from '@expo/vector-icons'
 import { Text, TextField, View } from 'react-native-ui-lib'
+import { useStreaks } from '@/hooks/useStreaks'
 
 type FilterOption = 'all' | 'inbox' | 'snoozed'
 
@@ -27,8 +29,14 @@ export default function InboxScreen() {
     queryKey: ['items', 'inbox'],
     queryFn: fetchInboxItems,
   })
+  const streakUtil = useStreaks()
 
-  const invalidate = () => {
+  const invalidate = async () => {
+    const res = await updateStreaks()
+   if (res) {
+    const { streak, best_streak, last_streak_at } = res.data.data[0]
+    streakUtil.setOptimistic({ streak, best_streak, last_streak_at })
+   }
     queryClient.invalidateQueries({ queryKey: ['items', 'inbox'] })
     queryClient.invalidateQueries({ queryKey: ['items', 'today'] })
   }
