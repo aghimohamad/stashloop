@@ -29,9 +29,9 @@ Deno.serve(async (req) => {
         headers: { ...cors, "Content-Type": "application/json" }, status: 200
       })
     }
-
+    console.log(auth , 'auth')
     // User → just me
-    if (!auth) return new Response("Unauthorized", { headers: cors, status: 401 })
+    if (!auth) return new Response("Unauthorized", { headers: cors, status: 402 })
 
     const client = createClient(
       Deno.env.get("SUPABASE_URL")!,
@@ -39,7 +39,9 @@ Deno.serve(async (req) => {
       { global: { headers: { Authorization: auth } } }
     )
     const { data: { user } } = await client.auth.getUser()
-    if (!user) return new Response("Unauthorized", { headers: cors, status: 401 })
+    console.log(user , 'user')
+
+    if (!user) return new Response("Unauthorized", { headers: cors, status: 403 })
 
     const { data, error } = await client.rpc('fill_today_for_user', { p_user_id: user.id })
     if (error) throw new Error(error.message)

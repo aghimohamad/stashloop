@@ -10,9 +10,7 @@
     "newArchEnabled": true,
     "ios": {
       "supportsTablet": true,
-      "associatedDomains": [
-        "applinks:stashloop.app"
-      ],
+      "associatedDomains": ["applinks:stashloop.app"],
       "infoPlist": {
         "NSAppTransportSecurity": {
           "NSAllowsArbitraryLoads": true
@@ -32,9 +30,7 @@
       "intentFilters": [
         {
           "action": "SEND",
-          "category": [
-            "DEFAULT"
-          ],
+          "category": ["DEFAULT"],
           "data": [
             {
               "mimeType": "text/*"
@@ -43,9 +39,7 @@
         },
         {
           "action": "SEND",
-          "category": [
-            "DEFAULT"
-          ],
+          "category": ["DEFAULT"],
           "data": [
             {
               "mimeType": "image/*"
@@ -54,9 +48,7 @@
         },
         {
           "action": "SEND_MULTIPLE",
-          "category": [
-            "DEFAULT"
-          ],
+          "category": ["DEFAULT"],
           "data": [
             {
               "mimeType": "image/*"
@@ -86,14 +78,16 @@
         }
       ],
       "expo-notifications",
-      ["expo-build-properties", {
-        "android": {
-          "compileSdkVersion": 34,
-          "targetSdkVersion": 34,
-          "minSdkVersion": 23,
-          "kotlinVersion": "2.2.20"
+      [
+        "expo-build-properties",
+        {
+          "android": {
+            "compileSdkVersion": 35,
+            "targetSdkVersion": 35,
+            "minSdkVersion": 24
+          }
         }
-      }]
+      ]
     ],
     "experiments": {
       "typedRoutes": true,

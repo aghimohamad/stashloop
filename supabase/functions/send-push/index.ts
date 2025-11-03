@@ -5,7 +5,6 @@ import { createClient } from "jsr:@supabase/supabase-js@2"
 const AUTH_HEADER = "x-cron-secret"
 
 async function sendExpo(tokens: string[], title: string, body: string) {
-  // chunk by 90 (Expo's soft limit)
   for (let i = 0; i < tokens.length; i += 90) {
     const chunk = tokens.slice(i, i + 90).map(t => ({ to: t, sound: "default", title, body }))
     await fetch("https://exp.host/--/api/v2/push/send", {
@@ -17,21 +16,31 @@ async function sendExpo(tokens: string[], title: string, body: string) {
 }
 
 function isWithinReminderWindow(nowUTC: Date, reminderHour: number, tz: string) {
-  // simple approximation: compute local hour by Intl API
-  const fmt = new Intl.DateTimeFormat('en-US', { hour: 'numeric', hour12: false, timeZone: tz })
+  const fmt = new Intl.DateTimeFormat("en-US", { hour: "numeric", hour12: false, timeZone: tz })
   const localHour = Number(fmt.format(nowUTC)) // 0..23
-  // allow ±30 minutes; to keep it simple, match same hour
   return localHour === reminderHour
 }
 
 Deno.serve(async (req) => {
-  if (req.headers.get(AUTH_HEADER) !== Deno.env.get("CRON_SECRET")) {
+  // DEBUG: log every incoming header (shows if your header arrived)
+  const hdrs = Object.fromEntries(req.headers)
+  console.log("incoming headers:", hdrs)
+
+  const cronHeader = req.headers.get(AUTH_HEADER) ?? ""
+  const authHeader = req.headers.get("authorization") ?? "" // case-insensitive
+
+  const cronOK = cronHeader && cronHeader === Deno.env.get("CRON_SECRET")
+  const isServiceRole = authHeader.startsWith("Bearer ") &&
+    authHeader.slice(7) === Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")
+
+  if (!cronOK && !isServiceRole) {
+    console.error("Unauthorized cron request")
     return new Response("Unauthorized", { status: 401 })
   }
 
   const supabase = createClient(
     Deno.env.get("SUPABASE_URL")!,
-    Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
+    Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")! // admin client for scheduled job
   )
 
   const now = new Date()
@@ -42,37 +51,52 @@ Deno.serve(async (req) => {
     .select("user_id, reminder_hour, timezone, push_opt_in, last_push_at")
     .eq("push_opt_in", true)
 
-  if (sErr || !settings) return new Response("settings error", { status: 500 })
+  if (sErr || !settings) {
+    console.error("settings error:", sErr?.message)
+    return new Response("settings error", { status: 500 })
+  }
 
-  // build list of user_ids to notify
   const notifyIds: string[] = []
   for (const s of settings) {
-    // skip if last_push_at is "today" in user's tz
     if (s.last_push_at) {
-      const lastStr = new Intl.DateTimeFormat('en-CA', { timeZone: s.timezone, dateStyle: 'short' }).format(new Date(s.last_push_at))
-      const nowStr  = new Intl.DateTimeFormat('en-CA', { timeZone: s.timezone, dateStyle: 'short' }).format(now)
+      const lastStr = new Intl.DateTimeFormat("en-CA", { timeZone: s.timezone, dateStyle: "short" }).format(new Date(s.last_push_at))
+      const nowStr  = new Intl.DateTimeFormat("en-CA", { timeZone: s.timezone, dateStyle: "short" }).format(now)
       if (lastStr === nowStr) continue
     }
     if (!isWithinReminderWindow(now, s.reminder_hour ?? 9, s.timezone ?? "Europe/Istanbul")) continue
     notifyIds.push(s.user_id)
   }
-  if (notifyIds.length === 0) return new Response(JSON.stringify({ ok: true, sent: 0 }), { status: 200 })
+  if (notifyIds.length === 0) {
+    return new Response(JSON.stringify({ ok: true, sent: 0 }), { status: 200 })
+  }
 
   // 2) Filter to users who actually have TODAY items
-  const { data: todayUsers } = await supabase
+  const { data: todayUsers, error: tErr } = await supabase
     .from("items")
     .select("user_id")
     .eq("status", "today")
     .in("user_id", notifyIds)
 
+  if (tErr) {
+    console.error("items query error:", tErr.message)
+    return new Response("items error", { status: 500 })
+  }
+
   const ids = Array.from(new Set((todayUsers ?? []).map(u => u.user_id)))
-  if (ids.length === 0) return new Response(JSON.stringify({ ok: true, sent: 0 }), { status: 200 })
+  if (ids.length === 0) {
+    return new Response(JSON.stringify({ ok: true, sent: 0 }), { status: 200 })
+  }
 
   // 3) Fetch tokens
-  const { data: tokens } = await supabase
+  const { data: tokens, error: dErr } = await supabase
     .from("device_tokens")
     .select("user_id, token")
     .in("user_id", ids)
+
+  if (dErr) {
+    console.error("device_tokens error:", dErr.message)
+    return new Response("tokens error", { status: 500 })
+  }
 
   const byUser = new Map<string, string[]>()
   for (const t of (tokens ?? [])) {
@@ -90,10 +114,12 @@ Deno.serve(async (req) => {
     sentCount += tks.length
 
     // 5) Mark last_push_at
-    await supabase
+    const { error: uErr } = await supabase
       .from("user_settings")
       .update({ last_push_at: new Date().toISOString() })
       .eq("user_id", uid)
+
+    if (uErr) console.error("update last_push_at error for", uid, uErr.message)
   }
 
   return new Response(JSON.stringify({ ok: true, sent: sentCount }), { status: 200 })

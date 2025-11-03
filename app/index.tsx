@@ -2,10 +2,12 @@ import { useTheme } from '@/lib/hooks/useTheme'
 import { ensureUserSettings, supabase } from '@/lib/supabase'
 import { Ionicons } from '@expo/vector-icons'
 import { LinearGradient } from 'expo-linear-gradient'
+import * as Linking from 'expo-linking'
 import { router } from 'expo-router'
 import { StatusBar } from 'expo-status-bar'
+import * as WebBrowser from 'expo-web-browser'
 import { useEffect, useState } from 'react'
-import { Dimensions } from 'react-native'
+import { Alert, Dimensions, Pressable } from 'react-native'
 import {
   Button,
   Card,
@@ -22,7 +24,7 @@ export default function Login() {
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
   const [isSignUp, setIsSignUp] = useState(false)
-  const { isDark, colors, shadows, gradients } = useTheme()
+  const { colors, shadows } = useTheme()
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
@@ -30,6 +32,41 @@ export default function Login() {
         router.replace('/(tabs)/today')
       }
     })
+
+    // Handle OAuth redirect
+    const handleDeepLink = (url: string) => {
+      if (url.includes('#access_token=') || url.includes('?access_token=')) {
+        const params = new URLSearchParams(url.split('#')[1] || url.split('?')[1])
+        const accessToken = params.get('access_token')
+        const refreshToken = params.get('refresh_token')
+        
+        if (accessToken) {
+          supabase.auth.setSession({
+            access_token: accessToken,
+            refresh_token: refreshToken || '',
+          }).then(async ({ data, error }) => {
+            if (!error && data.session) {
+              await ensureUserSettings()
+              router.replace('/(tabs)/today')
+            }
+          })
+        }
+      }
+    }
+
+    // Listen for deep links
+    const subscription = Linking.addEventListener('url', ({ url }) => {
+      handleDeepLink(url)
+    })
+
+    // Check if app was opened with a deep link
+    Linking.getInitialURL().then((url) => {
+      if (url) {
+        handleDeepLink(url)
+      }
+    })
+
+    return () => subscription?.remove()
   }, [])
 
   async function onLogin() {
@@ -54,6 +91,58 @@ export default function Login() {
       }
     } else {
       console.error('Signup error:', error.message)
+    }
+    setLoading(false)
+  }
+
+  async function onGoogleSignIn() {
+    setLoading(true)
+    try {
+      const redirectUrl = Linking.createURL('/')
+      const { data, error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: redirectUrl,
+          queryParams: {
+            access_type: 'offline',
+            prompt: 'consent',
+          },
+        },
+      })
+
+      if (error) {
+        Alert.alert('Error', error.message)
+        setLoading(false)
+        return
+      }
+
+      if (data.url) {
+        const result = await WebBrowser.openAuthSessionAsync(data.url, redirectUrl)
+        
+        if (result.type === 'success') {
+          const url = result.url
+          const params = new URLSearchParams(url.split('#')[1] || url.split('?')[1])
+          const accessToken = params.get('access_token')
+          const refreshToken = params.get('refresh_token')
+          
+          if (accessToken) {
+            const { data: sessionData, error: sessionError } = await supabase.auth.setSession({
+              access_token: accessToken,
+              refresh_token: refreshToken || '',
+            })
+            
+            if (!sessionError && sessionData.session) {
+              await ensureUserSettings()
+              router.replace('/(tabs)/today')
+            } else {
+              Alert.alert('Error', 'Failed to establish session')
+            }
+          }
+        }
+      }
+    } catch (error) {
+      console.error('Google sign-in error:', error)
+      Alert.alert('Error', 'Failed to sign in with Google')
     }
     setLoading(false)
   }
@@ -256,6 +345,38 @@ export default function Login() {
             <View flex height={1} style={{ backgroundColor: colors.border }} />
           </View>
 
+          {/* Google Sign-In Button */}
+          <Pressable
+            onPress={onGoogleSignIn}
+            disabled={loading}
+            style={({ pressed }) => ({
+              backgroundColor: pressed ? colors.surface : 'white',
+              borderWidth: 1,
+              borderColor: colors.border,
+              borderRadius: 12,
+              paddingVertical: 16,
+              paddingHorizontal: 20,
+              flexDirection: 'row',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: 12,
+              marginBottom: 16,
+              opacity: loading ? 0.6 : 1,
+              ...shadows.button,
+            })}
+          >
+            <GoogleIcon />
+            <Text
+              style={{
+                fontSize: 16,
+                fontWeight: '600',
+                color: '#1f2937',
+              }}
+            >
+              Continue with Google
+            </Text>
+          </Pressable>
+
           {/* Secondary Action Button */}
           <Button
             onPress={() => setIsSignUp(!isSignUp)}
@@ -294,5 +415,22 @@ export default function Login() {
         </View>
       </View>
     </LinearGradient>
+  )
+}
+// Google Icon Component
+function GoogleIcon() {
+  return (
+    <View
+      style={{
+        width: 20,
+        height: 20,
+        borderRadius: 10,
+        backgroundColor: '#4285F4',
+        justifyContent: 'center',
+        alignItems: 'center',
+      }}
+    >
+      <Text style={{ color: 'white', fontSize: 12, fontWeight: 'bold' }}>G</Text>
+    </View>
   )
 }

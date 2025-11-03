@@ -1,5 +1,3 @@
-
-
 # 🌀 StashLoop — Product Requirements Document (MVP)
 
 ## 1. Overview
@@ -23,9 +21,9 @@ They end up with hundreds of unread bookmarks and zero progress — digital clut
 StashLoop provides a **single inbox** for all saved links and uses a **daily resurfacing system** to re-show a few items each day (default: 3).
 Each surfaced item can be:
 
-* ✅ Marked **Done**
-* 🕐 **Snoozed** (for tomorrow or next week)
-* 📌 **Pinned** (prioritized in resurfacing)
+- ✅ Marked **Done**
+- 🕐 **Snoozed** (for tomorrow or next week)
+- 📌 **Pinned** (prioritized in resurfacing)
 
 This turns consumption into a game — progress, not storage.
 
@@ -46,8 +44,8 @@ This turns consumption into a game — progress, not storage.
 
 | Platform                          | Status                            |
 | --------------------------------- | --------------------------------- |
-| 📱 **Mobile (Expo/React Native)** | ✅ MVP                             |
-| 🖥️ Web (Next.js 15)              | Planned (post-launch)             |
+| 📱 **Mobile (Expo/React Native)** | ✅ MVP                            |
+| 🖥️ Web (Next.js 15)               | Planned (post-launch)             |
 | 🧩 Chrome Extension               | Planned (for “Save to StashLoop”) |
 
 ---
@@ -56,18 +54,18 @@ This turns consumption into a game — progress, not storage.
 
 **Client (Mobile)**
 
-* Expo (React Native + TypeScript)
-* React Query
-* Expo Router
-* Expo Notifications
-* Supabase JS SDK
+- Expo (React Native + TypeScript)
+- React Query
+- Expo Router
+- Expo Notifications
+- Supabase JS SDK
 
 **Backend**
 
-* Supabase (Postgres + Auth + RLS)
-* pg_cron for scheduled jobs
-* Supabase Edge Functions (Deno)
-* PostHog (optional analytics)
+- Supabase (Postgres + Auth + RLS)
+- pg_cron for scheduled jobs
+- Supabase Edge Functions (Deno)
+- PostHog (optional analytics)
 
 ---
 
@@ -96,15 +94,15 @@ This turns consumption into a game — progress, not storage.
 
 User reviews 3 items → marks:
 
-* ✅ **Done:** `status='done'`
-* 🕐 **Snooze:** `status='snoozed'`, sets `next_at` to tomorrow or next week
-* 📌 **Pin:** toggles `pinned=true`
+- ✅ **Done:** `status='done'`
+- 🕐 **Snooze:** `status='snoozed'`, sets `next_at` to tomorrow or next week
+- 📌 **Pin:** toggles `pinned=true`
 
 ### 🔹 Push Notification
 
-* Hourly cron triggers `send-push`
-* If user has today items, send Expo push:
-  *“Your 3 saved gems are ready ✨”*
+- Hourly cron triggers `send-push`
+- If user has today items, send Expo push:
+  _“Your 3 saved gems are ready ✨”_
 
 ---
 
@@ -224,9 +222,9 @@ Fetches Open Graph data for a URL and updates `items`.
 
 **Logic Summary:**
 
-* Fetches HTML with a custom UA
-* Extracts `<title>`, `og:title`, `twitter:title`, `og:description`, and `og:image`
-* Updates `title`, `description`, `thumb_url`, `domain`, and inferred `type`
+- Fetches HTML with a custom UA
+- Extracts `<title>`, `og:title`, `twitter:title`, `og:description`, and `og:image`
+- Updates `title`, `description`, `thumb_url`, `domain`, and inferred `type`
 
 ---
 
@@ -287,7 +285,7 @@ select cron.schedule(
 
 | Screen       | Purpose                                    | Key Actions                          |
 | ------------ | ------------------------------------------ | ------------------------------------ |
-| **Today**    | Show up to 3 resurfaced items              | ✅ Done, 🕐 Snooze, 📌 Pin            |
+| **Today**    | Show up to 3 resurfaced items              | ✅ Done, 🕐 Snooze, 📌 Pin           |
 | **Add Link** | Save new URL                               | Insert item → call `scrape-metadata` |
 | **Inbox**    | View backlog (status='inbox' or 'snoozed') | Edit, Delete                         |
 | **Stats**    | View streaks, total done                   | Read only                            |
@@ -340,11 +338,11 @@ supabase/
 
 ## 13. Future Enhancements
 
-* Browser Extension (“Save to StashLoop”)
-* Web Dashboard (Next.js)
-* Social integrations (save from LinkedIn/Twitter)
-* AI-based summarization (optional)
-* Sharing “Done” summaries weekly
+- Browser Extension (“Save to StashLoop”)
+- Web Dashboard (Next.js)
+- Social integrations (save from LinkedIn/Twitter)
+- AI-based summarization (optional)
+- Sharing “Done” summaries weekly
 
 ---
 
@@ -360,10 +358,10 @@ supabase/
 
 **Bullets:**
 
-* Save from any app
-* Daily resurfacing
-* Done / Snooze / Pin
-* Build streaks & progress
+- Save from any app
+- Daily resurfacing
+- Done / Snooze / Pin
+- Build streaks & progress
 
 ---
 
@@ -408,11 +406,11 @@ curl -X POST "https://<PROJECT_REF>.functions.supabase.co/scrape-metadata" \
 
 This PRD covers:
 
-* Full data model
-* Function logic
-* Cron setup
-* Screen requirements
-* Client ↔️ server flow
+- Full data model
+- Function logic
+- Cron setup
+- Screen requirements
+- Client ↔️ server flow
 
 Use this as a **single source of truth** for development and Codex CLI context.
 

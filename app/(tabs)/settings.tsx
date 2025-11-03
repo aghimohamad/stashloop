@@ -283,12 +283,6 @@ export default function SettingsScreen() {
           />
 
           <ActionButton
-            title="Send test notification"
-            icon="notifications-outline"
-            onPress={() => sendTestPush().catch(console.warn)}
-          />
-
-          <ActionButton
             title="Sign out"
             icon="log-out-outline"
             onPress={async () => {

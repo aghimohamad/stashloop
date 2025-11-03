@@ -223,45 +223,6 @@ export default function AddLinkScreen() {
             style={{ borderRadius: 18, paddingVertical: 16, opacity: submitDisabled ? 0.6 : 1 }}
             labelStyle={{ fontSize: 16, fontWeight: '600', color: 'white' }}
           />
-
-          {/* Development Tools */}
-          {__DEV__ && (
-            <View style={{ gap: 8, marginTop: 8 }}>
-              <Button
-                label="🧪 Test Random Share Intent"
-                onPress={() => {
-                  // Simulate a share intent for testing with random content
-                  const testIntent = getRandomTestIntent()
-                  router.push({
-                    pathname: '/(tabs)/add',
-                    params: {
-                      sharedUrl: testIntent.url,
-                      sharedTitle: testIntent.title,
-                      sharedText: testIntent.text
-                    }
-                  })
-                }}
-                backgroundColor="transparent"
-                labelStyle={{ color: colors.textSecondary, fontWeight: '500', fontSize: 14 }}
-                style={{ 
-                  borderRadius: 12, 
-                  paddingVertical: 12, 
-                  borderWidth: 1, 
-                  borderColor: colors.border
-                }}
-              />
-              
-              <Text style={{ 
-                fontSize: 12, 
-                color: colors.textSecondary, 
-                textAlign: 'center',
-                fontStyle: 'italic',
-                paddingHorizontal: 16
-              }}>
-                💡 Share intents only work in production builds, not Expo Go. Use clipboard detection or the simulation button above for testing.
-              </Text>
-            </View>
-          )}
         </Card>
 
         {lastSavedTitle && (
